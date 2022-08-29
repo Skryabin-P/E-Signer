@@ -13,11 +13,11 @@ Sign will be placed in the bottom of a page. Up to 3 signs work correctly
 ---
 This program helps our employee focus on their job, not bureaucracy
 
-Our employees has the same certificate password, so I just hardcoded it. You can change it in GUI.py on 91 string
+Our employees have the same certificate password, so I just hardcoded it. You can change it in GUI.py on 91 string
 or you can add another field in interface and grab password from it
 ---
 ### Also
- It easy can be transform to .exe with pyinstaller lib
+ It can easyly  be transformed to .exe with pyinstaller lib
 
 
 
