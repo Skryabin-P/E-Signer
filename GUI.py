@@ -47,12 +47,10 @@ class App():
 
         sign_all_button = Checkbutton(self.frame, text='Подписать все страницы в каждом документе', onvalue=True, offvalue=False, variable=self.checked)
         sign_all_button.grid(column=1, row=5)
-        # label4 = Label(self.frame, text='Подписать все страницы в каждом документе',font="Time 10")
-        # label4.grid(column=2,row=5)
+
         sign_button = Button(self.frame, text='Подписать', command=self.do_stuff)
         sign_button.grid(column=1, row=6, sticky="W E")
 
-        # , command = self.check_button_changed
 
         root.mainloop()
 
@@ -68,9 +66,8 @@ class App():
         self.savepath = askdirectory()
 
     def do_stuff(self):
+        # threading signing process so Tkinter do not freeze
         threading.Thread(target=self.sign).start()
-    # def check_button_changed(self):
-    #     print(self.checked.get())
 
     def sign(self):
         pb = Progressbar(self.frame, orient=HORIZONTAL, length=300, mode='determinate')
@@ -81,17 +78,18 @@ class App():
         files = os.listdir(self.pdfpath)
         certs = os.listdir(self.certpath)
         self.cert_path = []
-        step = 100 / len(certs) / len(files)
+        step = 100 /len(files)
+
         for cert in certs:
             self.cert_path.append(os.path.abspath(f"{self.certpath}/{cert}"))
 
-            for file in files:
-                self.file_path = os.path.abspath(f"{self.pdfpath}/{file}")
-                self.file_path_output = os.path.abspath(f"{self.savepath}/{file}")
-                run(self.cert_path, '123', self.file_path, self.file_path_output, self.checked.get())
-                pb['value'] += step
-                pb_label['text'] = f"{round(pb['value'],1)}%"
-                self.frame.update_idletasks()
+        for file in files:
+            self.file_path = os.path.abspath(f"{self.pdfpath}/{file}")
+            self.file_path_output = os.path.abspath(f"{self.savepath}/{file}")
+            run(self.cert_path, '123', self.file_path, self.file_path_output, self.checked.get())
+            pb['value'] += step
+            pb_label['text'] = f"{round(pb['value'],1)}%"
+            self.frame.update_idletasks()
 
         finished = Label(self.frame, text="Готово! Ваши файлы подписаны!", background='black', foreground='red', font='Times 14')
         finished.grid(column=1, row=8)

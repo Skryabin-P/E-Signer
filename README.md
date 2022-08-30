@@ -11,7 +11,7 @@ You just need provide folders where you have .pfx certificates, .pdf files and w
 Sign will be placed in the bottom of a page. Up to 3 signs work correctly
 
 ---
-This program helps our employee focus on their job, not bureaucracy
+This program helps our employees to focus on their job, not bureaucracy
 
 Our employees have the same certificate password, so I just hardcoded it. You can change it in GUI.py on 91 string
 or you can add another field in interface and grab password from it

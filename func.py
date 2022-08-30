@@ -1,8 +1,6 @@
 
-import argparse
 import PyPDF2
-import re
-import sys
+
 import datetime
 from cryptography.hazmat import backends
 from cryptography.hazmat.primitives.serialization import pkcs12
@@ -10,11 +8,10 @@ from cryptography.x509.oid import NameOID
 from endesive import pdf
 signature_string = lambda organization, date, country : (organization + '\nDATE: '+ date)
 
-def eprint(error):
-    print(error, file=sys.stderr)
+
 
 def load_pfx(file_path, password):
-    """ Function to load pkcs12 object from the given password protected pfx file."""
+    # Function to load pkcs12 object from the given password protected pfx file.
 
     with open(file_path, 'rb') as fp:
         return pkcs12.load_key_and_certificates(fp.read(), password.encode(), backends.default_backend())
@@ -34,6 +31,7 @@ OID_NAMES = {
 }
 
 def get_rdns_names(rdns):
+    # parsing data from .pfx certificate
     names = {}
     for oid in OID_NAMES:
         names[OID_NAMES[oid]] = ''
@@ -50,6 +48,8 @@ def run(pfx_certificates, password,input_file, dest, all ):
             # Load the PKCS12 object from the pfx file
             p12pk, p12pc, p12oc = load_pfx(pfx_certificate, password)
 
+            # since we sign files with each certificate separately , after first signing we save signed file in the destination save folder
+            # and after that we should read that signed file to sign with another certificates
             if not first_time:
                 input_file = dest
             names = get_rdns_names(p12pc.subject.rdns)
@@ -60,7 +60,7 @@ def run(pfx_certificates, password,input_file, dest, all ):
             start = num_pages - 1
             dest = dest if dest else input_file
             if all:
-               start = 0
+               start = 0  # if checked "sign all pages" then start signing from first page otherwise from the last
             for page in range(start,pages):
                 if not first_time:
                     input_file = dest
@@ -71,12 +71,13 @@ def run(pfx_certificates, password,input_file, dest, all ):
                 pdfread = PyPDF2.PdfFileReader(pdf_f)
 
                 fields = pdfread.get_fields()
-
+                # collect name fields in document
                 if str(type(fields)) != "<class 'NoneType'>":
                     signs = fields.keys()
                 else:
                     signs = ['nothing']
                 i = 1
+                # check how many our signs on page
                 for sign in signs:
                     for t in range(1,4):
                         mask = f"Signature{t}_p{page+1}s"
@@ -85,11 +86,13 @@ def run(pfx_certificates, password,input_file, dest, all ):
 
 
 
-
+                # offset coordinates of the digital sign
                 if i == 1:
                     plus_coord = 0
                 else:
                     plus_coord = 150 * (i-1)
+
+                # parameters of the sign like size, align, place coords, etc
                 dct = {
                 "aligned": 0,
                 "sigflags": 3,
@@ -121,7 +124,7 @@ def run(pfx_certificates, password,input_file, dest, all ):
                 }
 
 
-
+                # sign page with cryptography
                 datau = open(input_file, 'rb').read()
                 datas = pdf.cms.sign(datau,
                              dct,
@@ -137,10 +140,9 @@ def run(pfx_certificates, password,input_file, dest, all ):
                 first_time = False
         return True
     except Exception as e:
-        import traceback; traceback.print_exc()
-        eprint(e)
+        print(e)
         return False
-        # sys.exit()
+
 
 if __name__ == '__main__':
     input_file = 'doc2.pdf'
@@ -148,4 +150,4 @@ if __name__ == '__main__':
     password = '123'
     dest = 'doc2.pdf'
 
-    print(run(pfx_certificate,password,dest,input_file))
+    print(run(pfx_certificate,password,dest,input_file,False))
